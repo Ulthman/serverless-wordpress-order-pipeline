@@ -1,0 +1,67 @@
+<?php
+/**
+ * Plugin Name: Fluent Forms to AWS API Gateway Bridge
+ * Description: Intercepts Fluent Forms submissions and forwards structured order data to AWS API Gateway.
+ * Version: 1.0.0
+ * Author: Portfolio Showcase
+ */
+
+if (!defined('ABSPATH')) {
+    exit; // Exit if accessed directly
+}
+
+// Single clean action hook execution
+add_action('fluentform/submission_inserted', 'send_clean_fluentform_to_aws', 10, 3);
+
+function send_clean_fluentform_to_aws($entryId, $formData, $form) {
+    // Replace with your actual API Gateway POST endpoint URL
+    $api_url = 'https://YOUR_API_GATEWAY_ID.execute-api.us-east-1.amazonaws.com/prod/submit';
+
+    // Extract and format customer full name
+    $full_name = '';
+    if (isset($formData['names'])) {
+        if (is_array($formData['names'])) {
+            $full_name = trim(implode(' ', $formData['names']));
+        } else {
+            $full_name = $formData['names'];
+        }
+    } elseif (isset($formData['first_name']) || isset($formData['last_name'])) {
+        $first_name = isset($formData['first_name']) ? $formData['first_name'] : '';
+        $last_name  = isset($formData['last_name']) ? $formData['last_name'] : '';
+        $full_name  = trim($first_name . ' ' . $last_name);
+    }
+
+    // Extract remaining order fields safely
+    $phone_number     = isset($formData['numeric']) ? $formData['numeric'] : (isset($formData['phone']) ? $formData['phone'] : '');
+    $delivery_address = isset($formData['description']) ? $formData['description'] : (isset($formData['address']) ? $formData['address'] : '');
+    $package_selected = isset($formData['radio']) ? $formData['radio'] : (isset($formData['package']) ? $formData['package'] : '');
+
+    // Construct JSON payload matching AWS Lambda requirements
+    $payload = array(
+        'customer_name'    => $full_name,
+        'phone_number'     => $phone_number,
+        'delivery_address' => $delivery_address,
+        'package_selected' => $package_selected,
+        'entry_id'         => $entryId,
+        'submitted_at'     => date('Y-m-d H:i:s')
+    );
+
+    // Send HTTP POST request to API Gateway asynchronously
+    $response = wp_remote_post($api_url, array(
+        'method'      => 'POST',
+        'timeout'     => 15,
+        'redirection' => 5,
+        'httpversion' => '1.1',
+        'blocking'    => true,
+        'headers'     => array(
+            'Content-Type' => 'application/json; charset=utf-8'
+        ),
+        'body'        => json_encode($payload),
+        'data_format' => 'body'
+    ));
+
+    // Optional error logging for administrative debugging
+    if (is_wp_error($response)) {
+        error_log('AWS Webhook Error: ' . $response->get_error_message());
+    }
+}
