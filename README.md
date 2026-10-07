@@ -69,6 +69,7 @@ The WordPress PHP hook transmits the following formatted JSON payload to AWS API
   "entry_id": 104,
   "submitted_at": "2026-10-06 11:53:32"
 }
+```
 🔧 Local Development & Deployment
 Deploy DynamoDB Table: Create a table named ordersTable with a primary partition key named order_id (String).
 
