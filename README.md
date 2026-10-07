@@ -5,19 +5,20 @@ An event-driven, decoupled backend pipeline built to offload order processing an
 ---
 
 ## 🏗️ Architecture Overview
+
+```text
 [ Fluent Forms / WordPress ]
-│
-▼ (HTTP POST via Custom PHP Webhook Hook)
-[ AWS API Gateway ]
-│
-▼ (Triggers Integration Event)
-[ AWS Lambda ]
-/
-
-/
-
-▼              ▼
+             │
+             ▼ (HTTP POST via Custom PHP Webhook Hook)
+   [ AWS API Gateway ]
+             │
+             ▼ (Triggers Integration Event)
+     [ AWS Lambda ]
+      /          \
+     /            \
+    ▼              ▼
 [ DynamoDB ]   [ AWS SES ]
+(Order Store)  (Email Alert)
 (Order Store)  (Email Alert)   **Order Capture:** User submits order data on a WordPress landing page using Fluent Forms.
 2. **Payload Dispatch:** A lightweight WordPress PHP action hook intercepts the submission and forwards structured JSON to an AWS API Gateway endpoint.
 3. **Serverless Execution:** API Gateway triggers an AWS Lambda function running Python 3.12.
