@@ -19,7 +19,8 @@ An event-driven, decoupled backend pipeline built to offload order processing an
     ▼              ▼
 [ DynamoDB ]   [ AWS SES ]
 (Order Store)  (Email Alert)
-(Order Store)  (Email Alert)   **Order Capture:** User submits order data on a WordPress landing page using Fluent Forms.
+(Order Store)  (Email Alert)```
+1  **Order Capture:** User submits order data on a WordPress landing page using Fluent Forms.
 2. **Payload Dispatch:** A lightweight WordPress PHP action hook intercepts the submission and forwards structured JSON to an AWS API Gateway endpoint.
 3. **Serverless Execution:** API Gateway triggers an AWS Lambda function running Python 3.12.
 4. **Data Persistence & Alerting:** Lambda concurrently writes order records to Amazon DynamoDB and triggers an instant administrative email alert via Amazon SES.
